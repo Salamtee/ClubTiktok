@@ -1,5 +1,12 @@
+// Fix: c-ares (Node.js internal DNS) is configured to use 127.0.0.1 as its DNS
+// server, but there is no DNS service running on localhost, causing ECONNREFUSED.
+// Override to use Cloudflare (1.1.1.1) before any module that triggers DNS loads.
+const dns = require('dns');
+dns.setServers(['1.1.1.1', '8.8.8.8']);
+
 require('dotenv').config();
 const bcrypt = require('bcryptjs');
+
 const connectDB = require('./db');
 const User = require('./models/User');
 const Item = require('./models/Item');
@@ -25,9 +32,9 @@ async function run() {
   const hashed = await bcrypt.hash('admin123', 10);
   await User.create({
     id: 'u_admin',
-    username: 'admin',
+    username: 'soundboy',
     password: hashed,
-    fullName: 'Salam Tee',
+    fullName: 'Sound Boy',
     role: ROLES.ADMIN,
     section: SECTIONS.MANAGEMENT,
     shift: 'All',
@@ -41,9 +48,9 @@ async function run() {
   });
 
   console.log('[seed] Database reset. Created a single default admin account:');
-  console.log('[seed]   username: admin');
+  console.log('[seed]   username: soundboy');
   console.log('[seed]   password: admin123');
-  console.log('[seed]   fullName: Salam Tee');
+  console.log('[seed]   fullName: Sound Boy');
   console.log('[seed] No other users, items, reports, stock, or bookings were created.');
 
   process.exit(0);
