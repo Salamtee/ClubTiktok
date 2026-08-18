@@ -28,9 +28,6 @@ router.post('/login', async (req, res) => {
     const cleanUsername = username.trim().toLowerCase();
     const user = await User.findOne({ username: cleanUsername });
     if (!user) return res.json({ ok: false, error: 'No staff account found for that username.' });
-    if (user.status !== 'active') {
-      return res.json({ ok: false, error: 'This staff account is deactivated. Contact the System Admin.' });
-    }
     const match = await bcrypt.compare(password || '', user.password);
     if (!match) return res.json({ ok: false, error: 'Incorrect password.' });
 

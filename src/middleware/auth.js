@@ -9,8 +9,8 @@ async function requireAuth(req, res, next) {
 
     const payload = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findOne({ id: payload.id }).lean();
-    if (!user || user.status !== 'active') {
-      return res.status(401).json({ ok: false, error: 'Session expired or account deactivated.' });
+    if (!user) {
+      return res.status(401).json({ ok: false, error: 'Session expired or user not found.' });
     }
     delete user.password;
     req.user = user;

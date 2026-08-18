@@ -71,13 +71,25 @@ router.patch('/:id', requireAuth, requireRole(ROLES.ADMIN, ROLES.SUPERVISOR, ROL
     if (!user) return res.status(404).json({ ok: false, error: 'User not found' });
 
     const patch = { ...req.body };
-    if (patch.password) {
-      patch.password = await bcrypt.hash(patch.password, 10);
+
+    if (patch.username && patch.username.trim()) {
+      const cleanUsername = patch.username.trim().toLowerCase();
+      const existing = await User.findOne({ username: cleanUsername, id: { $ne: req.params.id } });
+      if (existing) {
+        return res.json({ ok: false, error: 'That username is already taken.' });
+      }
+      patch.username = cleanUsername;
+    } else {
+      delete patch.username;
+    }
+
+    if (patch.password && patch.password.trim()) {
+      patch.password = await bcrypt.hash(patch.password.trim(), 10);
     } else {
       delete patch.password;
     }
+
     delete patch.id;
-    delete patch.username;
 
     Object.assign(user, patch);
     await user.save();
@@ -90,26 +102,27 @@ router.patch('/:id', requireAuth, requireRole(ROLES.ADMIN, ROLES.SUPERVISOR, ROL
   }
 });
 
-router.patch('/:id/status', requireAuth, requireRole(ROLES.ADMIN), async (req, res) => {
+router.delete('/:id', requireAuth, requireRole(ROLES.ADMIN), async (req, res) => {
   try {
-    const { status } = req.body || {};
-    const user = await User.findOne({ id: req.params.id });
-    if (!user) return res.status(404).json({ ok: false });
+    if (req.user.id === req.params.id) {
+      return res.json({ ok: false, error: 'You cannot delete your own account while logged in.' });
+    }
 
-    user.status = status;
-    if (status === 'inactive') user.isOnline = false;
-    await user.save();
+    const user = await User.findOne({ id: req.params.id });
+    if (!user) return res.status(404).json({ ok: false, error: 'User not found' });
+
+    await User.deleteOne({ id: req.params.id });
 
     await logActivity(
       req.user.username,
-      `${status === 'active' ? 'Reactivated' : 'Deactivated'} staff account "${user.username}"`,
+      `Deleted staff account "${user.fullName}" (${user.username})`,
       req.user.role,
       req.user.section
     );
-    return res.json({ ok: true, user: sanitize(user) });
+    return res.json({ ok: true });
   } catch (err) {
-    console.error('[users/status]', err);
-    return res.status(500).json({ ok: false, error: 'Failed to update account status.' });
+    console.error('[users/delete]', err);
+    return res.status(500).json({ ok: false, error: 'Failed to delete staff account.' });
   }
 });
 
