@@ -12,6 +12,7 @@ const reportRoutes = require('./src/routes/reports');
 const stockRoutes = require('./src/routes/stock');
 const bookingRoutes = require('./src/routes/bookings');
 const activityRoutes = require('./src/routes/activity');
+const settingsRoutes = require('./src/routes/settings');
 
 const app = express();
 
@@ -44,6 +45,7 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/stock', stockRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/activity', activityRoutes);
+app.use('/api/settings', settingsRoutes);
 
 // Serve the frontend as a static site from the same server.
 const FRONTEND_DIR = path.join(__dirname, '..', 'frontend');

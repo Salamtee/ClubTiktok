@@ -27,13 +27,23 @@ const SHIFT_START_HOURS = {
 
 const MANAGEMENT_ROLES = [ROLES.ADMIN, ROLES.SUPERVISOR, ROLES.MANAGER];
 
-function calculatePunctuality(shiftName, dateObj = new Date()) {
-  const startHour = SHIFT_START_HOURS[shiftName];
+function calculatePunctuality(shiftName, dateObj = new Date(), customShiftTimes = null) {
+  let startHour = SHIFT_START_HOURS[shiftName];
+  let startMinute = 0;
+
+  if (customShiftTimes && customShiftTimes[shiftName] && customShiftTimes[shiftName].start) {
+    const parts = customShiftTimes[shiftName].start.split(':').map(Number);
+    if (!isNaN(parts[0])) {
+      startHour = parts[0];
+      startMinute = parts[1] || 0;
+    }
+  }
+
   if (startHour === undefined || startHour === null) {
     return { status: 'On Time', label: 'On Time', minutesLate: 0, badge: '🟢 On Time' };
   }
   const shiftStart = new Date(dateObj);
-  shiftStart.setHours(startHour, 0, 0, 0);
+  shiftStart.setHours(startHour, startMinute, 0, 0);
   const diffMinutes = Math.round((dateObj.getTime() - shiftStart.getTime()) / (1000 * 60));
   if (diffMinutes <= 15) {
     return { status: 'On Time', label: 'On Time', minutesLate: Math.max(0, diffMinutes), badge: '🟢 On Time' };
