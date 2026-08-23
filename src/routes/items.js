@@ -8,7 +8,16 @@ const router = express.Router();
 const canManage = [ROLES.ADMIN, ROLES.SUPERVISOR, ROLES.MANAGER];
 
 router.get('/', requireAuth, async (req, res) => {
-  const items = await Item.find().select('-_id').lean();
+  const { section } = req.query;
+  let query = {};
+  if (section && section !== 'All' && section !== 'Management') {
+    const escaped = section.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    query.$or = [
+      { section: new RegExp(`^${escaped}$`, 'i') },
+      { category: new RegExp(escaped, 'i') },
+    ];
+  }
+  const items = await Item.find(query).select('-_id').lean();
   res.json({ ok: true, items });
 });
 
