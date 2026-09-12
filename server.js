@@ -49,8 +49,9 @@ app.use('/api/activity', activityRoutes);
 app.use('/api/settings', settingsRoutes);
 
 // Serve the frontend as a static site from the same server.
-// Guard: on Render the frontend/ directory may not exist — skip silently.
-const FRONTEND_DIR = path.join(__dirname, '..', 'frontend');
+// The frontend/ folder sits alongside server.js at the repo root,
+// so we reference it directly (no '..').
+const FRONTEND_DIR = path.join(__dirname, 'frontend');
 if (fs.existsSync(FRONTEND_DIR)) {
   app.use(express.static(FRONTEND_DIR));
   app.get('*', (req, res, next) => {
