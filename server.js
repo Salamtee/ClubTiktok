@@ -1,5 +1,6 @@
 require('dotenv').config();
 const path = require('path');
+const fs   = require('fs');
 const express = require('express');
 const cors = require('cors');
 const connectDB = require('./src/db');
@@ -48,12 +49,15 @@ app.use('/api/activity', activityRoutes);
 app.use('/api/settings', settingsRoutes);
 
 // Serve the frontend as a static site from the same server.
+// Guard: on Render the frontend/ directory may not exist — skip silently.
 const FRONTEND_DIR = path.join(__dirname, '..', 'frontend');
-app.use(express.static(FRONTEND_DIR));
-app.get('*', (req, res, next) => {
-  if (req.path.startsWith('/api/')) return next();
-  res.sendFile(path.join(FRONTEND_DIR, 'index.html'));
-});
+if (fs.existsSync(FRONTEND_DIR)) {
+  app.use(express.static(FRONTEND_DIR));
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api/')) return next();
+    res.sendFile(path.join(FRONTEND_DIR, 'index.html'));
+  });
+}
 
 const PORT = process.env.PORT || 5001;
 
